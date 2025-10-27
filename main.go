@@ -9,7 +9,10 @@ func main() {
 	const EurToRub = UsdToRub / UsdToEur
 }
 
-func collectUserInputAndCount(amount int, currentCurrency string, wantedCurrency string) int {
+func collectUserInput() (int, string, string) {
+	var amount int
+	var currentCurrency string
+	var wantedCurrency string
 	fmt.Println("Collecting user input and count")
 	fmt.Println("Enter amount of money")
 	fmt.Scan(&amount)
@@ -17,4 +20,8 @@ func collectUserInputAndCount(amount int, currentCurrency string, wantedCurrency
 	fmt.Scan(&currentCurrency)
 	fmt.Println("Enter wanted currency")
 	fmt.Scan(&wantedCurrency)
+
+	return amount, currentCurrency, wantedCurrency
 }
+
+func countNewAmount(amount int, currentCurrency string, wantedCurrency string) int {}
