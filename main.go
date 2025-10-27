@@ -24,4 +24,6 @@ func collectUserInput() (int, string, string) {
 	return amount, currentCurrency, wantedCurrency
 }
 
-func countNewAmount(amount int, currentCurrency string, wantedCurrency string) int {}
+func countNewAmount(amount int, currentCurrency string, wantedCurrency string) int {
+	return 0
+}
