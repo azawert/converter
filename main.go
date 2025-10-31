@@ -8,72 +8,98 @@ import (
 )
 
 func main() {
+	// Цикл для повторного ввода при ошибке
+	for {
+		amount, currentCurrency, wantedCurrency, inputError := collectUserInput()
 
-	amount, currentCurrency, wantedCurrency, inputError := collectUserInput()
+		if inputError != nil {
+			fmt.Printf("❌ Error: %v\n\n", inputError)
+			continue // Повторяем ввод
+		}
 
-	if inputError != nil {
-		fmt.Println(inputError)
-		return
+		newAmount := countNewAmount(amount, currentCurrency, wantedCurrency)
+		fmt.Printf("\n✓ Result: %.2f %s = %.2f %s\n", float64(amount), currentCurrency, newAmount, wantedCurrency)
+		break // Успешно, выходим из цикла
 	}
-
-	newAmount := countNewAmount(amount, currentCurrency, wantedCurrency)
-
-	println(newAmount)
-
 }
 
 func collectUserInput() (int, string, string, error) {
-	var amount int
-	var currentCurrency string
-	var wantedCurrency string
 	validCurrencies := []string{"EUR", "USD", "RUB"}
 
-	// Ввод текущей валюты
-	fmt.Printf("Enter a valid currency %s\n", strings.Join(validCurrencies, ","))
-	fmt.Scan(&currentCurrency)
-	currentCurrency = strings.ToUpper(currentCurrency)
-
-	if !slices.Contains(validCurrencies, currentCurrency) {
-		return 0, "", "", errors.New("Invalid currency provided")
-	}
-
-	// ✅ ДОБАВЛЕНО: Очистка буфера после первого ввода
-	fmt.Scanln() // Считываем оставшийся символ новой строки
-
-	// Ввод суммы
-	fmt.Println("Enter a value")
-	_, err := fmt.Scanf("%d", &amount)
+	// Ввод и валидация текущей валюты
+	fmt.Printf("Enter a valid currency [%s]: ", strings.Join(validCurrencies, ", "))
+	currentCurrency, err := inputAndValidateCurrency(validCurrencies)
 	if err != nil {
-		return 0, "", "", errors.New("Invalid amount provided")
+		return 0, "", "", err
 	}
 
-	// ✅ ДОБАВЛЕНО: Очистка буфера после ввода числа
-	fmt.Scanln()
+	// Ввод и валидация суммы
+	fmt.Print("Enter a value: ")
+	amount, err := inputAndValidateNumber()
+	if err != nil {
+		return 0, "", "", err
+	}
 
-	// Ввод желаемой валюты
-	fmt.Println("Enter a wanted currency")
-	fmt.Scan(&wantedCurrency)
-	wantedCurrency = strings.ToUpper(wantedCurrency)
+	// Ввод и валидация желаемой валюты
+	fmt.Print("Enter a wanted currency: ")
+	wantedCurrency, err := inputAndValidateCurrency(validCurrencies)
+	if err != nil {
+		return 0, "", "", err
+	}
 
+	// Проверка, что валюты разные
 	if wantedCurrency == currentCurrency {
-		return 0, "", "", errors.New("Currencies must be different")
-	}
-
-	if !slices.Contains(validCurrencies, wantedCurrency) {
-		return 0, "", "", errors.New("Invalid currency provided")
+		return 0, "", "", errors.New("currencies must be different")
 	}
 
 	return amount, currentCurrency, wantedCurrency, nil
 }
 
-func countNewAmount(amount int, currentCurrency string, wantedCurrency string) int {
+// Функция ввода и проверки валюты
+func inputAndValidateCurrency(validCurrencies []string) (string, error) {
+	var currency string
+	fmt.Scanln(&currency)
+	currency = strings.ToUpper(strings.TrimSpace(currency))
+
+	if !validateCurrency(currency, validCurrencies) {
+		return "", errors.New("invalid currency provided")
+	}
+
+	return currency, nil
+}
+
+// Функция валидации валюты
+func validateCurrency(currency string, validCurrencies []string) bool {
+	return slices.Contains(validCurrencies, currency)
+}
+
+// Функция ввода и проверки числа
+func inputAndValidateNumber() (int, error) {
+	var amount int
+	_, err := fmt.Scanln(&amount)
+
+	if err != nil {
+		// Очистка буфера при ошибке
+		var discard string
+		fmt.Scanln(&discard)
+		return 0, errors.New("invalid amount provided")
+	}
+
+	if amount <= 0 {
+		return 0, errors.New("amount must be positive")
+	}
+
+	return amount, nil
+}
+
+func countNewAmount(amount int, currentCurrency string, wantedCurrency string) float64 {
 	const UsdToEur = 0.86
 	const UsdToRub = 80.0
 	const EurToUsd = 1.16
 	const RubToUsd = 0.0125
 
 	if currentCurrency == wantedCurrency {
-		return int(float64(amount))
+		return float64(amount)
 	}
 
 	amountInUsd := 0.0
@@ -90,13 +116,12 @@ func countNewAmount(amount int, currentCurrency string, wantedCurrency string) i
 
 	switch wantedCurrency {
 	case "USD":
-		return int(amountInUsd)
+		return amountInUsd
 	case "EUR":
-		return int(amountInUsd * UsdToEur)
+		return amountInUsd * UsdToEur
 	case "RUB":
-		return int(amountInUsd * UsdToRub)
+		return amountInUsd * UsdToRub
 	default:
 		return 0
 	}
-
 }
