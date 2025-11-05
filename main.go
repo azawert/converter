@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 )
 
 func main() {
@@ -40,27 +42,33 @@ func getOperation() (string, error) {
 }
 
 func getNumbers() ([]int, error) {
-	var numbers []int
-	for {
-		var input string
+	var input string
+	numbers := []int{}
 
-		fmt.Println("Введите любое число или n для прекращения:")
-		_, err := fmt.Scan(&input)
-		if err != nil {
-			return []int{}, err
-		}
-		if input == "n" {
-			break
-		}
+	fmt.Println("Введите числа через запятую (например: 2, 10, 9):")
+	fmt.Scan(&input)
 
-		var num int
-		_, err = fmt.Sscanf(input, "%d", &num)
-		if err != nil {
-			fmt.Println("Ошибка: введите корректное число или 'n'")
+	// Разделяем строку по запятым
+	numberStrings := strings.Split(input, ",")
+
+	for _, numStr := range numberStrings {
+		// Убираем пробелы вокруг чисел
+		cleanedNumStr := strings.TrimSpace(numStr)
+
+		// Пропускаем пустые строки
+		if cleanedNumStr == "" {
 			continue
 		}
+
+		// Преобразуем строку в число
+		num, err := strconv.Atoi(cleanedNumStr)
+		if err != nil {
+			return nil, fmt.Errorf("некорректное число: %s", cleanedNumStr)
+		}
+
 		numbers = append(numbers, num)
 	}
+
 	return numbers, nil
 }
 
@@ -70,14 +78,16 @@ func calc(operation string, numbers []int) (float64, error) {
 		var sum float64
 		for _, number := range numbers {
 			sum += float64(number)
-			return sum, nil
+
 		}
+		return sum, nil
 	case "AVG":
 		var sum float64
 		for _, number := range numbers {
 			sum += float64(number) / float64(len(numbers))
-			return sum, nil
+
 		}
+		return sum, nil
 	case "MED":
 		if len(numbers) == 0 {
 			return 0, errors.New("для медианы нужен хотя бы один элемент")
